@@ -5,4 +5,4 @@
 *.IMG
 *aux.xml
 *.pyc
-color_relief.txt
+Mars/color_relief.txt
