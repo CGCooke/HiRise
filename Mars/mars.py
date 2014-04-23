@@ -12,21 +12,29 @@ import numpy as np
 import gdal
 import cairo
 
-
 def colourizeTile(inputFileName='*.IMG',outFileName = 'OUT.TIF'):
 
-	''' Use GDAL utilities to visualize data '''
+	'''
+	Use GDAL utilities to visualize data
+	Basically we are calling a bunch of GDAL utilities to help visualize the data
+	'''
 
+	''' Convert .IMG file into a .TIF file '''
 	os.system('gdal_translate '+inputFileName+' MARS.TIF')
+
+	''' Resize image using cubic spline to a resolution of 2 meters '''	
 	os.system('gdalwarp -q -tr 2 -2 -r cubic MARS.TIF SHRUNK.TIF')
 	
+	''' do some hillshading '''
 	os.system('gdaldem hillshade -q -az 45 -alt 45 -of PNG SHRUNK.TIF hillshade.TIF')
+
+	''' produce an image which is colored by altitude , color map is stored in color_relief.txt '''
 	os.system('gdaldem color-relief -q SHRUNK.TIF color_relief.txt color_relief.TIF')
+
+	''' do some slope shading '''
 	os.system('gdaldem slope -q SHRUNK.TIF slope.TIF')
 	os.system('gdaldem color-relief -q slope.TIF color_slope.txt slopeshade.TIF')
 	
-	#os.system('python contours.py')
-
 	''' Merge components using Python Image Lib '''
 	slopeshade = Image.open("slopeshade.TIF").convert('L')
 	hillshade = Image.open("hillshade.TIF")
@@ -34,15 +42,12 @@ def colourizeTile(inputFileName='*.IMG',outFileName = 'OUT.TIF'):
 	shading = ImageChops.multiply(slopeshade, hillshade).convert('RGB')
 	output = ImageChops.multiply(shading,colorRelief)
 
-	#contours =  Image.open("contours.png")
-	#output = ImageChops.multiply(output,contours)
 	output.save(outFileName)
 
 	''' copy the projection info to the output file '''
 	os.system('python gdalcopyproj.py SHRUNK.TIF '+outFileName)
 
 	''' Save space by deleting all the intermediate files '''
-	
 	os.system('rm slope.TIF')
 	os.system('rm slopeshade.TIF')
 	os.system('rm color_relief.TIF')
@@ -67,10 +72,13 @@ def shiftImage(scenePath = 'SHRUNK.TIF'):
 	img = Image.fromarray(outputImg)
 	img.save('shifted.TIF')
 
-def initializeCairoSurface(surfaceShape):    
+def initializeCairoSurface(surfaceShape):
+	''' Boiler plate code to initialize cairo surface '''
 	WIDTH,HEIGHT =surfaceShape
 	surface = cairo.ImageSurface (cairo.FORMAT_RGB24, WIDTH, HEIGHT)
 	ctx = cairo.Context (surface)
+
+	''' Setting the background of the surface to be black '''
 	ctx.line_to (0,0) 
 	ctx.line_to (0,HEIGHT) 
 	ctx.line_to (WIDTH,HEIGHT) 
@@ -82,6 +90,7 @@ def initializeCairoSurface(surfaceShape):
 	return(ctx,surface)
 
 def drawTriangle(p1x,p1y,p2x,p2y,p3x,p3y,ctx):
+	''' Draws a triangle between 3 points in 2d space '''
 	ctx.move_to(p1x,p1y)
 	ctx.line_to(p2x,p2y)
 	ctx.line_to(p3x,p3y)
@@ -90,6 +99,11 @@ def drawTriangle(p1x,p1y,p2x,p2y,p3x,p3y,ctx):
 
 
 def projectPoint(X,Y,Z,f):
+	'''
+	Project point from 3D space to 2D space
+	See http://en.wikipedia.org/wiki/Pinhole_camera_model
+	'''
+
 	x = f*float(X)/float(Z)
 	y = f*float(Y)/float(Z)
 	return(x,y)
