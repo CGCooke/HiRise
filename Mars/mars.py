@@ -21,6 +21,8 @@ def createColorMapLUT(minHeight,maxHeight,cmap = cm.jet,numSteps=256):
 	Create a colormap for visualization
 	You can choose any colormap from : http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps?action=AttachFile&do=get&target=colormaps3.png 
 	RICHARD : Use this function to generate fancy colormaps!
+	Pro tip : tacking on _r to the end of the name of any color map reverses it,
+	for example, YlGn -> YlGn_r 
 	'''
 	colorMap =[]
 	f =open('color_relief.txt','w')
@@ -30,7 +32,7 @@ def createColorMapLUT(minHeight,maxHeight,cmap = cm.jet,numSteps=256):
 		f.write(str(height)+','+str(int(255*r))+','+str(int(255*g))+','+str(int(255*b))+'\n')
 	f.close()
 	
-def colourizeTile(inputFileName='DTEEC_023586_1425_024008_1425_A01.IMG',outFileName = 'OUT.TIF',resolution =20,deleteIntermediaryFiles=False):
+def colourizeTile(inputFileName='DTEEC_023586_1425_024008_1425_A01.IMG',outFileName = 'combined.TIF',resolution =20,deleteIntermediaryFiles=False):
 
 	'''
 	Use GDAL utilities to visualize data
@@ -78,6 +80,7 @@ def colourizeTile(inputFileName='DTEEC_023586_1425_024008_1425_A01.IMG',outFileN
 		os.system('rm *aux.xml')
 	
 def downloadedScene(fpath ='http://hirise.lpl.arizona.edu/PDS/DTM/ESP/ORB_016900_016999/ESP_016907_1330_ESP_016973_1330/DTEED_016907_1330_016973_1330_U01.IMG'):
+	''' Added in this function to be absolutely explicit about where the DEM's come from/which file to download '''
 	os.system('wget '+fpath)
 	
 if __name__ == "__main__": 
