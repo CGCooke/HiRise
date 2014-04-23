@@ -3,3 +3,5 @@
 *.png
 *.xcf
 *.IMG
+*aux.xml
+*.pyc
