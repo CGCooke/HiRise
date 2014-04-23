@@ -17,7 +17,7 @@ def shiftImage(scenePath = 'SHRUNK.TIF'):
 	inputImg = np.asarray(Image.open('OUT.TIF'))
 	
 	outputImg = np.zeros((inputImg.shape[0],inputImg.shape[1]*2,3),dtype =np.uint8)
-	print(inputImg.shape)
+	
 	''' There are 2 ways to do this, loop through every output pixel, or loop through every input pixel '''
 	for i in range(0,inputImg.shape[1]):
 		for j in range(0,inputImg.shape[0]):

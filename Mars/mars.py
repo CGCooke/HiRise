@@ -7,6 +7,8 @@ import sys
 
 ''' related third party imports ''' 
 import gdal
+import matplotlib.cm as cm
+from PIL import Image,ImageChops
 
 ''' local imports '''
 import VectorDrawing
@@ -14,7 +16,21 @@ import ImageShifting
 
 ''' Some functions for visualizing data from http://hirise.lpl.arizona.edu/dtm/ '''
 
-def colourizeTile(inputFileName='DTEED_016907_1330_016973_1330_U01.IMG',outFileName = 'OUT.TIF',resolution =20,deleteIntermediaryFiles=False):
+def createColorMapLUT(minHeight,maxHeight,cmap = cm.jet,numSteps=256):
+	'''
+	Create a colormap for visualization
+	You can choose any colormap from : http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps?action=AttachFile&do=get&target=colormaps3.png 
+	RICHARD : Use this function to generate fancy colormaps!
+	'''
+	colorMap =[]
+	f =open('color_relief.txt','w')
+	for i in range(0,numSteps):
+		r,g,b,a= cmap(i/float(numSteps))
+		height = minHeight + (maxHeight-minHeight)*(i/numSteps)
+		f.write(str(height)+','+str(int(255*r))+','+str(int(255*g))+','+str(int(255*b))+'\n')
+	f.close()
+	
+def colourizeTile(inputFileName='DTEEC_023586_1425_024008_1425_A01.IMG',outFileName = 'OUT.TIF',resolution =20,deleteIntermediaryFiles=False):
 
 	'''
 	Use GDAL utilities to visualize data
@@ -26,6 +42,10 @@ def colourizeTile(inputFileName='DTEED_016907_1330_016973_1330_U01.IMG',outFileN
 
 	''' Resize image using cubic spline to a resolution of (resolution) meters '''	
 	os.system('gdalwarp -q -tr '+str(resolution)+' -'+str(resolution)+' -r cubic MARS.TIF SHRUNK.TIF')
+	
+	ds = gdal.Open('SHRUNK.TIF', gdal.GA_ReadOnly)
+	DEM=(ds.GetRasterBand(1).ReadAsArray())
+	createColorMapLUT(DEM.min(),DEM.max())
 	
 	''' do some hillshading '''
 	os.system('gdaldem hillshade -q -az 45 -alt 45 -of PNG SHRUNK.TIF hillshade.TIF')
@@ -61,7 +81,7 @@ def downloadedScene(fpath ='http://hirise.lpl.arizona.edu/PDS/DTM/ESP/ORB_016900
 	os.system('wget '+fpath)
 	
 if __name__ == "__main__": 
-	downloadedScene()
+	#downloadedScene()
 	colourizeTile()
 	print('Shifting image')
 	ImageShifting.shiftImage()
