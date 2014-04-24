@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import scipy.ndimage.interpolation
 
 def SSD(template,imageSubsection):
+	''' Function to find the sum of squares difference between an image subsection and a template '''
 	diffsSquared = ((template-imageSubsection)**2)
 	score = diffsSquared.sum()
 	return(score)
@@ -37,6 +38,7 @@ def buildDepthMap(stereogram,patchSize,stepSize,maxShift,minShift):
 	return(depthMap)
 
 def zoom(array,zoomFactor):
+	''' Zoom in an array by a zoomFactor times '''
 	return(scipy.ndimage.interpolation.zoom(array,zoomFactor))
 
 

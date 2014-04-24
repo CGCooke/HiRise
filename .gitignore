@@ -6,3 +6,7 @@
 *aux.xml
 *.pyc
 Mars/color_relief.txt
+Earth/color_relief.txt
+*.hdr
+*.tfw
+*.zip

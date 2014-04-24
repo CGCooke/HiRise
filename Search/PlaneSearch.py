@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def SSD(template,mask,imageSubsection):
-	''' Function to find the sum of squares difference between a mask and a template '''
+	''' Function to find the sum of squares difference between an image subsection and a template '''
 	diffsSquared = ((template-imageSubsection)**2)
 	diffsSquared *=mask
 	score = diffsSquared.sum()
