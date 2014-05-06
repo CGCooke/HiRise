@@ -22,14 +22,16 @@ def findBestMatch(stereogram,x,y,offset,maxShift,minShift):
 			minScore = score
 	return(bestJ)
 
-def buildDepthMap(stereogram,patchSize,stepSize,maxShift,minShift):
-	offset = stereogram.shape[1]/2
-	depthMap = np.zeros((stereogram.shape[0]-patchSize,offset-patchSize))
-	for y in range(0,stereogram.shape[0]-patchSize,stepSize):
+def buildDepthMap(left,right,patchSize,stepSize,maxShift,minShift):
+	#offset = stereogram.shape[1]/2
+	''' Create depth map array '''
+	depthMap = np.zeros((stereogram.shape[0]-patchSize,stereogram.shape[1]-patchSize))
+
+	for y in range(0,left.shape[0]-patchSize,stepSize):
 		print y
-		for x in range(0,offset-patchSize-maxShift,stepSize):
-			bestX = findBestMatch(stereogram,x,y,offset,maxShift,minShift)
-			shift = bestX-x-offset
+		for x in range(0,left.shape[1]-patchSize-maxShift,stepSize):
+			bestX = findBestMatch(left,right,x,y,maxShift,minShift)
+			shift = bestX-x
 			if shift>maxShift:
 				shift=maxShift
 			if shift<minShift:
@@ -44,11 +46,16 @@ def zoom(array,zoomFactor):
 
 patchSize = 10
 stepSize = 1
-stereogram = np.asarray(Image.open('Pentagon.jpg'))
-stereogram = zoom(stereogram,0.25)
+
+left = np.asarray(Image.open('NZ_left.png'))
+left = zoom(left,0.25)
+
+right = np.asarray(Image.open('NZ_right.png'))
+right = zoom(right,0.25)
+
 maxShift =20
 minShift =0
-depthMap= buildDepthMap(stereogram,patchSize,stepSize,maxShift,minShift)
+depthMap= buildDepthMap(left,right,patchSize,stepSize,maxShift,minShift)
 
 plt.imshow(depthMap)
 plt.colorbar()

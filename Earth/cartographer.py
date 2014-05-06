@@ -12,21 +12,7 @@ import numpy as np
 import gdal
 import matplotlib.cm as cm
 
-def createColorMapLUT(minHeight,maxHeight,cmap = cm.jet,numSteps=256):
-	'''
-	Create a colormap for visualization
-	You can choose any colormap from : http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps?action=AttachFile&do=get&target=colormaps3.png 
-	RICHARD : Use this function to generate fancy colormaps!
-	Pro tip : tacking on _r to the end of the name of any color map reverses it,
-	for example, YlGn -> YlGn_r 
-	'''
-	colorMap =[]
-	f =open('color_relief.txt','w')
-	for i in range(0,numSteps):
-		r,g,b,a= cmap(i/float(numSteps))
-		height = minHeight + (maxHeight-minHeight)*(i/numSteps)
-		f.write(str(height)+','+str(int(255*r))+','+str(int(255*g))+','+str(int(255*b))+'\n')
-	f.close()
+#sys.path.append("/Users/Cameron/Documents/OpenLearning/Common")
 
 def downloadDEMFromCGIAR(lat,lon):
 	''' Download a DEM from CGIAR FTP repository '''
@@ -46,7 +32,28 @@ def downloadDEMFromCGIAR(lat,lon):
 		os.system('''wget --user=data_public --password='GDdci' http://data.cgiar-csi.org/srtm/tiles/GeoTIFF/'''+fileName)
 		os.system('unzip '+fileName)
 
-def renderTile(lat,lon,deleteIntermediaryFiles=False):
+def createColorMapLUT(minHeight,maxHeight,cmap = cm.jet,numSteps=256):
+	'''
+	Create a colormap for visualization
+	You can choose any colormap from : http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps?action=AttachFile&do=get&target=colormaps3.png 
+	RICHARD : Use this function to generate fancy colormaps!
+	Pro tip : tacking on _r to the end of the name of any color map reverses it,
+	for example, YlGn -> YlGn_r 
+	'''
+	colorMap =[]
+	f =open('color_relief.txt','w')
+	for i in range(0,numSteps):
+		r,g,b,a= cmap(i/float(numSteps))
+		height = minHeight + (maxHeight-minHeight)*(i/numSteps)
+		f.write(str(height)+','+str(int(255*r))+','+str(int(255*g))+','+str(int(255*b))+'\n')
+	f.write(str(-1)+','+str(int(255*r))+','+str(int(255*g))+','+str(int(255*b))+'\n')
+	
+	f.write('-0.1,135,206,250 \n')
+	f.write('0.1,135,206,250 \n')
+	
+	f.close()
+
+def renderTile(lat,lon,deleteIntermediaryFiles=True):
 	'''
 	Render a DEM by using hillshading, slopeshading, hyposomatic tinting and controus
 	DEM is projected to UTM
@@ -72,7 +79,7 @@ def renderTile(lat,lon,deleteIntermediaryFiles=False):
 
 	''' 100 meter resolution is used because input data is 90 meter resolution, and 100 meter resoultion is numericall neater,
 	and slightly undersamples data. '''
-	
+
 	os.system('gdalwarp -q -t_srs '+EPSGCode+' -tr 100 -100 -r cubic -srcnodata -32768  '+inputFileName+' warped.TIF')
 
 	''' Set the colorscheme to range from the min height to max height in DEM '''
