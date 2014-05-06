@@ -53,14 +53,17 @@ def createColorMapLUT(minHeight,maxHeight,cmap = cm.jet,numSteps=256):
 	
 	f.close()
 
-def renderTile(lat,lon,deleteIntermediaryFiles=True):
+def renderTile(lat,lon,deleteIntermediaryFiles=False):
 	'''
 	Render a DEM by using hillshading, slopeshading, hyposomatic tinting and controus
 	DEM is projected to UTM
 	Should also try this http://www.shadedrelief.com/shelton/
 	'''
-	outFileName ='out.TIF'
-
+	outFileName = 'out.TIF'
+	hillShade = True
+	slopeShading = True
+	colorRelief = True 
+	contours = False
 	''' Compute the input file name '''
 	tileX = int(math.ceil((lon+180)/5.0))
 	tileY = -1*int(math.ceil((lat-65)/5.0))
@@ -82,17 +85,22 @@ def renderTile(lat,lon,deleteIntermediaryFiles=True):
 
 	os.system('gdalwarp -q -t_srs '+EPSGCode+' -tr 100 -100 -r cubic -srcnodata -32768  '+inputFileName+' warped.TIF')
 
+	inputFileName = 'warped.TIF'
 	''' Set the colorscheme to range from the min height to max height in DEM '''
 	ds = gdal.Open('warped.TIF', gdal.GA_ReadOnly)
 	DEM=(ds.GetRasterBand(1).ReadAsArray())
 	createColorMapLUT(DEM.min(),DEM.max(),cmap =cm.YlGn_r)
 
-	os.system('gdaldem hillshade -q -az 45 -alt 45 -of PNG warped.TIF hillshade.TIF')
-	os.system('gdaldem color-relief -q warped.TIF color_relief.txt color_relief.TIF')
-	os.system('gdaldem slope -q warped.TIF slope.TIF')
-	os.system('gdaldem color-relief -q slope.TIF color_slope.txt slopeshade.TIF')
+	if hillShade == True:
+		os.system('gdaldem hillshade -q -az 45 -alt 45 -of PNG '+inputFileName+' hillshade.TIF')
+	if colorRelief == True:
+		os.system('gdaldem color-relief -q '+inputFileName+' color_relief.txt color_relief.TIF')
+	if slopeShading == True:
+		os.system('gdaldem slope -q '+inputFileName+' slope.TIF')
+		os.system('gdaldem color-relief -q slope.TIF color_slope.txt slopeshade.TIF')
 	
-	os.system('python contours.py')
+	if contours == True:
+		os.system('python contours.py')
 
 	''' Merge components using Python Image Lib '''
 	slopeshade = Image.open("slopeshade.TIF").convert('L')
@@ -101,8 +109,9 @@ def renderTile(lat,lon,deleteIntermediaryFiles=True):
 	shading = ImageChops.multiply(slopeshade, hillshade).convert('RGB')
 	output = ImageChops.multiply(shading,colorRelief)
 
-	contours =  Image.open("contours.png")
-	output = ImageChops.multiply(output,contours)
+	if contours == True :
+		contours =  Image.open("contours.png")
+		output = ImageChops.multiply(output,contours)
 	output.save(outFileName)
 
 	''' copy the projection info to the output file '''
@@ -119,7 +128,7 @@ def renderTile(lat,lon,deleteIntermediaryFiles=True):
 		os.system('rm *aux.xml')
 	
 if __name__ == "__main__":
-	lon,lat = float(sys.argv[1]),float(sys.argv[2])
-	#lat,lon = -13.1631,-72.54
+	#lon,lat = float(sys.argv[1]),float(sys.argv[2])
+	lat,lon = -33,151
 	downloadDEMFromCGIAR(lat,lon)    
 	renderTile(lat,lon)
